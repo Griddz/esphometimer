@@ -21,10 +21,11 @@ static template_::TemplateSwitch* * switches[] = {&enabled, &sunday, &monday, &t
 static template_::TemplateNumber* * numbers[] = {&time_hour, &time_minute, &output, &action, &offset_hour, &offset_minute, &mode};
 
 // the number should match the amount of relays below
-const uint8_t num_of_relays = 2;
+const uint8_t num_of_relays = 1;
 
 // match the output number to the position of the relay here
-static gpio::GPIOSwitch* * relays[num_of_relays] = {&relay_0, &relay_1};
+static gpio::GPIOSwitch* * relays[num_of_relays] = {&relay_0};
+
 
 /***************************************************
 *      ***** Timer Format Cheat Guide *****
@@ -226,17 +227,17 @@ void onSelect(std::string x) {
     uint8_t num_timer = 0;
     if(x == "-- Select --") {
         num_timer = 0;
-    } else if(x == "Timer 1") {
+    } else if(x == "Timer 1 HeaterOn") {
         num_timer = 1;
-    } else if(x == "Timer 2") {
+    } else if(x == "Timer 2 HeaterOff") {
         num_timer = 2;
-    } else if(x == "Timer 3") {
+    } else if(x == "Timer 3 HeaterOn") {
         num_timer = 3;
-    } else if(x == "Timer 4") {
+    } else if(x == "Timer 4 HeaterOff") {
         num_timer = 4;
-    } else if(x == "Timer 5") {
+    } else if(x == "Timer 5 HeaterOn") {
         num_timer = 5;
-    } else if(x == "Timer 6") {
+    } else if(x == "Timer 6 HeaterOff") {
         num_timer = 6;
     } else if(x == "Timer 7") {
         num_timer = 7;
@@ -297,17 +298,17 @@ void onSelect(std::string x) {
 void onPressSave() {
     ESP_LOGD("onPressSave", "------ Save Button Pressed ------");
     uint8_t num_timer = 0;
-    if(id(select_timer).state == "Timer 1") {
+    if(id(select_timer).state == "Timer 1 HeaterOn") {
         num_timer = 1;
-    } else if(id(select_timer).state == "Timer 2") {
+    } else if(id(select_timer).state == "Timer 2 HeaterOff") {
         num_timer = 2;
-    } else if(id(select_timer).state == "Timer 3") {
+    } else if(id(select_timer).state == "Timer 3 HeaterOn") {
         num_timer = 3;
-    } else if(id(select_timer).state == "Timer 4") {
+    } else if(id(select_timer).state == "Timer 4 HeaterOff") {
         num_timer = 4;
-    } else if(id(select_timer).state == "Timer 5") {
+    } else if(id(select_timer).state == "Timer 5 HeaterOn") {
         num_timer = 5;
-    } else if(id(select_timer).state == "Timer 6") {
+    } else if(id(select_timer).state == "Timer 6 Heateroff") {
         num_timer = 6;
     } else if(id(select_timer).state == "Timer 7") {
         num_timer = 7;

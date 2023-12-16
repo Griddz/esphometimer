@@ -62,6 +62,15 @@ globals:
   - id: global_next_run
     type: time_t[20]
     restore_value: no
+  - id: flag_count_antifreezSolar
+    type: uint8_t
+    restore_value: yes
+    initial_value : 1
+  - id: flag_count_antifreezPipe
+    type: uint8_t
+    restore_value: yes
+    initial_value : 1    
+
 
 # /***************************************************
 # *      ***** Timer Format Cheat Guide *****
@@ -153,18 +162,52 @@ number:
     step: 1
     mode: box
 
+#add by zhou start
+  - platform: template
+    name: 101 Tank Target Temperature
+    id: target_temp
+    optimistic: true
+    restore_value: true
+    initial_value: 50
+    min_value: 1
+    max_value: 70
+    unit_of_measurement: °C
+    step: 1
+    mode: box
+#add by zhou end    
+
+
 switch:
   - platform: gpio
-    name: Built-in LED
+    name: Heater
     id: relay_0
-    pin: 2
+    pin: 2    #  改相应针
     inverted: false
     restore_mode: RESTORE_DEFAULT_OFF
+  # - platform: gpio
+  #   name: Relay 1
+  #   id: relay_1
+  #   pin: 4
+  #   inverted: false
+  #   restore_mode: RESTORE_DEFAULT_OFF
   - platform: gpio
-    name: Relay 1
-    id: relay_1
-    pin: 4
+    name: Pump1  #太阳能板循环泵
+    id: pump1
+    pin: 2    #  改相应针
     inverted: false
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: Pump2  #管道热水循环泵
+    id: pump2
+    pin: 2    #  改相应针
+    inverted: false
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: template
+    name: 103 Holiday
+    id: holiday_mode
+    optimistic : true
     restore_mode: RESTORE_DEFAULT_OFF
 
   - platform: template
@@ -226,6 +269,8 @@ switch:
     optimistic : true
     restore_mode: ALWAYS_OFF
 
+
+
 select:
   - platform: template
     id: select_timer
@@ -235,26 +280,26 @@ select:
     initial_option: -- Select --
     options: 
       - -- Select --
-      - Timer 1
-      - Timer 2
-      - Timer 3
-      - Timer 4
-      - Timer 5
-      - Timer 6
-      - Timer 7
-      - Timer 8
-      - Timer 9
-      - Timer 10
-      - Timer 11
-      - Timer 12
-      - Timer 13
-      - Timer 14
-      - Timer 15
-      - Timer 16
-      - Timer 17
-      - Timer 18
-      - Timer 19
-      - Timer 20
+      - Timer 1 HeaterOn
+      - Timer 2 HeaterOff
+      - Timer 3 HeaterOn
+      - Timer 4 HeaterOff
+      - Timer 5 HeaterOn
+      - Timer 6 HeaterOff
+      # - Timer 7
+      # - Timer 8
+      # - Timer 9
+      # - Timer 10
+      # - Timer 11
+      # - Timer 12
+      # - Timer 13
+      # - Timer 14
+      # - Timer 15
+      # - Timer 16
+      # - Timer 17
+      # - Timer 18
+      # - Timer 19
+      # - Timer 20
     on_value:
       - lambda: |-
           onSelect(x);
@@ -265,6 +310,42 @@ button:
     on_press:
       - lambda: |-
           onPressSave();
-
+  - platform: template
+    name: 102 Hotwater Manual Heating
+    on_press: 
+    #水箱加热至目标温度
+      - lambda: |-
+          onPressHeatingtoTarget()
+    
+        
   - platform: restart
     name: "Restart"
+# DS18B20温度传感器
+dallas:
+  - pin: GPIO23
+
+sensor:
+  - platform: dallas
+    address: 0xA40000031F055028
+    name: "太阳能板处温度"
+    id: t1_solar
+  - platform: dallas
+    address: 0xDD0000031EFB0428
+    name: "热水箱上部温度"
+    id: t2_tank_top
+  - platform: dallas
+    address: 0xDD0000031EFB0428
+    name: "循环水管处温度"
+    id: tt3_pipe
+  - platform: dallas
+    address: 0xDD0000031EFB0428
+    name: "热水箱下部温度"
+    id: t4_tank_bottom  
+
+  - platform: wifi_signal
+    name:  solarHotwaterControl WiFi Signal
+    update_interval: 60s
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: solarHotwaterControl IP Address    
