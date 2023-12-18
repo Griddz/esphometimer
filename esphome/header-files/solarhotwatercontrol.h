@@ -16,6 +16,10 @@ or connect to: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
 #pragma once
 #include <array>
 
+#include <iostream>
+#include <chrono>
+#include <thread>
+
 static template_::TemplateSwitch* * switches[] = {&enabled, &sunday, &monday, &tuesday, &wednesday, &thursday, &friday, &saturday, &repeat, &negative_offset};
 
 static template_::TemplateNumber* * numbers[] = {&time_hour, &time_minute, &output, &action, &offset_hour, &offset_minute, &mode};
@@ -24,7 +28,25 @@ static template_::TemplateNumber* * numbers[] = {&time_hour, &time_minute, &outp
 const uint8_t num_of_relays = 1;
 
 // match the output number to the position of the relay here
-static gpio::GPIOSwitch* * relays[num_of_relays] = {&relay_0};
+static gpio::GPIOSwitch* * relays[num_of_relays] = {&relay_0_heater};
+
+const float protect_temp = 80;
+
+//抗冻开始温度阀值
+const float antifreez_temp = 3;
+
+//抗冻结束温度阀值
+const float antifreezstop_temp = 5;
+
+//抗冻时水箱温度阀值
+const float antifreeztank_temp = 8;
+
+//太阳能板与水箱的温差高阀值
+const float high_deltasolartanktop_temp = 8;
+
+//太阳能板与水箱的温差低阀值
+const float low_deltasolartanktop_temp = 4;
+
 
 
 /***************************************************
@@ -356,3 +378,156 @@ void onPressSave() {
     // timer settings changed reset timestamps
     setTimestamps(num_timer);
 } // onPressSave
+
+ // add by zhou start 
+void antifreezeSolar(){
+    id(flag_count_antifreezSolar) = false;
+    ESP_LOGD("进入防冻太阳板程序");
+    if(id(t4_tank_bottom).state < antifreeztank_temp){
+        if(id(relay_0_heater).state == false){
+            ESP_LOGD("电加热器开关被太阳能板防冻函数打开");
+            id(relay_0_heater).publish_state(true);
+        }else if(id(relay_0_heater).state == true){
+            ESP_LOGD("电加热器开关已经被打开");   
+        }
+        else{
+            ESP_LOGD("警告：电加热器开关不可用，太阳能板抗冻可能失败");
+        }     
+        }
+    ESP_LOGD("打开太阳能循环泵抗冻");   
+    id(pump1).publish_state(true);
+    if(id(t1_solar).state > antifreezstop_temp){
+        ESP_LOGD("关闭太阳能循环泵");
+        id(pump1).publish_state(false);
+        ESP_LOGD("关闭电加热开关");
+        id(relay_0_heater).publish_state(false);
+        id(flag_count_antifreezSolar) = false;
+        ESP_LOGD("太阳能板抗冻程序结束");
+    }else{
+        ESP_LOGD("需再入太阳能板抗冻程序");
+        id(flag_count_antifreezSolar) = true;
+    }
+}
+        
+void antifreezePipe(){
+    id(flag_count_antifreezPipe) = false;
+    ESP_LOGD("进入防冻管道程序");
+    if(id(t2_tank_top).state < antifreeztank_temp){
+        if(id(relay_0_heater).state == false){
+            ESP_LOGD("电加热器开关被管道防冻函数打开");
+            id(relay_0_heater).publish_state(true);
+        }else if(id(relay_0_heater).state == true){
+            ESP_LOGD("电加热器开关已经被打开");   
+        }
+        else{
+            ESP_LOGD("警告：电加热器开关不可用，管道抗冻可能失败");
+        }     
+        }
+    ESP_LOGD("打开管道循环泵抗冻");   
+    id(pump2).publish_state(true);
+    if(id(t3_pipe).state > antifreezstop_temp){
+        ESP_LOGD("关闭管道循环泵");
+        id(pump2).publish_state(false);
+        ESP_LOGD("关闭电加热开关");
+        id(relay_0_heater).publish_state(false);
+        id(flag_count_antifreezPipe) = false;
+        ESP_LOGD("管道抗冻程序结束");
+    }else{
+        ESP_LOGD("需再入管道抗冻程序");
+        id(flag_count_antifreezPipe) = true;
+    }
+}
+        
+void protectTank(){
+    ESP_LOGD("水箱高温保护，关闭电加热器");
+    id(relay_0_heater).publish_state(false);
+    ESP_LOGD("水箱高温保护，关闭太阳能板循环泵");
+    id(pump1).publish_state(false);
+    
+}
+
+// 手动加热函数,一旦被调用，电加热最多加热二小时，如果持续加热二小时水箱还没有到目标温度，则停止加热；
+// 如果在二小时内水箱已加热至目标温度，则立即停止电加热。
+void onPressHeatingtoTarget() {
+    unit8_t target_temp = id(target_temp).state
+    bool heaterOn = false;
+    esphome::ESPTime startTime = id(sntp_time).now();
+    if(id(t2_tank_top).state>= target_temp){
+        id(relay_0_heater).publish_state(false);
+        ESP_LOGD("温度已达到 %i 度,无需手动加热,关闭加热器并退出手动加热函数",target_temp);
+        return; 
+    }
+    while (true) {
+        int t1 = id(t2_tank_top).state; // 从传感器读取上部水箱温度
+
+        if (t1 < target_temp && !heaterOn) {
+            heaterOn = true;
+            id(relay_0_heater).publish_state(true);
+            ESP_LOGD("手动打开电加热器开关");
+        } else {
+            if (t1 >= target_temp) {
+                heaterOn = false;
+                id(relay_0_heater).publish_state(false);
+                ESP_LOGD("温度达到%i度,关闭加热器并退出手动加热函数",target_temp);
+                break; 
+            }
+
+            esphome::ESPTime currentTime = id(sntp_time).now();
+            time_t elapsedTime = currentTime.Timestamp - startTime.timestamp; 
+            ESP_LOGD("手动加热持续时间：%lu 秒",elapsedTime);
+            if (elapsedTime >= 7200) { // 7200秒（2小时）
+                heaterOn = false;
+                id(relay_0_heater).publish_state(false);
+                ESP_LOGD("手动加热已持续 %lu 秒,关闭加热器并退出手动加热函数",elapsedTime);
+                break; // 结束函数执行
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::seconds(60)); //delay 60秒
+    }
+}
+
+void mainonInterval(){
+    if((id(t1_solar).state <= antifreez_temp)||(id(flag_count_antifreezSolar))){
+        
+        antifreezeSolar(); //调用太阳能板防冻函数
+    }
+    if((id(t3_pipe).state <= antifreez_temp)||(id(flag_count_antifreezPipe))){
+
+        antifreezePipe(); //调用循环管道防冻函数
+    }
+    if(id(t2_tank_top).state >= protect_temp){
+
+        protectTank();  //调用水箱高温保护函数
+        return;
+    }else{
+        if(((id(t1_solar).state - id(t2_tank_top).state)>= high_deltasolartanktop_temp)&&
+           (id(t2_tank_top <= protect_temp))){
+            ESP_LOGD("打开太阳能板循环泵换热");   
+            id(pump1).publish_state(true);    
+        }
+        if(((id(t1_solar).state - id(t2_tank_top).state)< low_deltasolartanktop_temp)){
+            ESP_LOGD("太阳能板循环泵关闭,完成换热");   
+            id(pump1).publish_state(false);       
+        }
+        if(id(holiday_mode).state){
+            ESP_LOGD("度假中,跳出mainInterval一次");  
+            return;
+
+        }else{
+            if(id(t2_tank_top).state <= id(target_temp).state){
+                ESP_LOGD("检查并执行定时加热"); 
+                onInterval(); //
+            }else{
+                ESP_LOGD("水箱已到目标温度,关掉电加热器,跳出mainInterval一次"); 
+                id(relay_0_heater).publish_state(false);
+                return;
+            }
+        
+        }
+    }
+
+}
+
+
+
