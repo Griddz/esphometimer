@@ -1,8 +1,9 @@
 esphome:
-  name: solarHotwaterControl
+ # name: solarHotwaterControl
+  name: esphome-web-43242b
   friendly_name: 太阳能控制器
   includes:
-    - /solarHotwaterControl.h
+    - solarhotwatercontrol.h
   on_boot:
     - priority: 800                      # This is where all hardware initialization of vital components is executed
       then:
@@ -10,7 +11,7 @@ esphome:
             setTimestamps();
 
 esp8266:
-  board: espesp01_1m
+  board: esp01_1m
   restore_from_flash: True
   
 wifi:
@@ -18,10 +19,11 @@ wifi:
   password: !secret wifi_password
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
-    ssid: "solarHotwaterControl Fallback Hotspot"
+    ssid: "solarHotWater Fallback Hotspot"
     password: ""
  
 logger:
+  level: DEBUG
 captive_portal:
 api:
 ota:
@@ -65,11 +67,11 @@ globals:
   - id: flag_count_antifreezSolar
     type: bool
     restore_value: yes
-    initial_value : false
+    initial_value : "false"
   - id: flag_count_antifreezPipe
     type: bool
     restore_value: yes
-    initial_value : false
+    initial_value : "false"
 
 
 # /***************************************************
@@ -181,7 +183,7 @@ switch:
   - platform: gpio
     name: Heater
     id: relay_0_heater
-    pin: gpio16   #  改相应针
+    pin: GPIO16   #  改相应针
     inverted: false
     restore_mode: RESTORE_DEFAULT_OFF
   # - platform: gpio
@@ -193,14 +195,14 @@ switch:
   - platform: gpio
     name: Pump1  #太阳能板循环泵
     id: pump1
-    pin: gpio4    #  改相应针
+    pin: GPIO4    #  改相应针
     inverted: false
     restore_mode: RESTORE_DEFAULT_OFF
 
   - platform: gpio
     name: Pump2  #管道热水循环泵
     id: pump2
-    pin: gpio5    #  改相应针
+    pin: GPIO5    #  改相应针
     inverted: false
     restore_mode: RESTORE_DEFAULT_OFF
 
@@ -315,32 +317,37 @@ button:
     on_press: 
     #水箱加热至目标温度
       - lambda: |-
-          onPressHeatingtoTarget()
+          onPressHeatingtoTarget();
     
         
   - platform: restart
     name: "Restart"
 # DS18B20温度传感器
 dallas:
-  - pin: GPIO15
-
+  - pin: GPIO2 
+    update_interval: 10s
 sensor:
-  # - platform: dallas
-  #   address: 0xA40000031F055028
-  #   name: "太阳能板处温度"
-  #   id: t1_solar
-  # - platform: dallas
-  #   address: 0xDD0000031EFB0428
-  #   name: "热水箱上部温度"
-  #   id: t2_tank_top
-  # - platform: dallas
-  #   address: 0xDD0000031EFB0428
-  #   name: "循环水管处温度"
-  #   id: t3_pipe
-  # - platform: dallas
-  #   address: 0xDD0000031EFB0428
-  #   name: "热水箱下部温度"
-  #   id: t4_tank_bottom  
+  - platform: dallas
+    address: 0x140000003089bc28
+    name: "t1_solar"
+#    name: "太阳能板处温度"
+    id: t1_solar
+    
+  - platform: dallas
+    address: 0xe200000031ace028
+    name: "t2_tank_top"
+#    name: "热水箱上部温度"
+    id: t2_tank_top
+  - platform: dallas
+    address: 0xc0000000335cd228
+    name: "t3_pipe"
+#    name: "循环水管处温度"
+    id: t3_pipe
+  - platform: dallas
+    address: 0x9a00000031399728
+    name: "t4_tank_bottom"
+#    name: "热水箱下部温度"
+    id: t4_tank_bottom  
 
   - platform: wifi_signal
     name:  solarHotwaterControl WiFi Signal
@@ -349,3 +356,4 @@ text_sensor:
   - platform: wifi_info
     ip_address:
       name: solarHotwaterControl IP Address    
+    
