@@ -52,7 +52,7 @@ interval:
   - interval: 10s
     then:
       - lambda: |-
-          onInterval();
+          mainonInterval();
 
 globals:
   - id: global_timer
@@ -72,6 +72,17 @@ globals:
     type: bool
     restore_value: yes
     initial_value : "false"
+
+  - id: global_heateron
+    type: time_t
+    restore_value: no
+  - id: global_pump1on
+    type: time_t
+    restore_value: no
+  - id: global_pump2on
+    type: time_t
+    restore_value: no   
+
 
 
 # /***************************************************
@@ -185,7 +196,22 @@ switch:
     id: relay_0_heater
     pin: GPIO16   #  改相应针
     inverted: false
-    restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: ALWAYS_OFF
+    on_turn_on:
+      - lambda: |-
+          esphome::ESPTime date = id(sntp_time).now();
+          struct tm tm ;
+          tm = date.to_c_tm();
+          id(global_heateron) = mktime(&tm);
+    on_turn_off:
+      - lambda: |-
+          
+          id(global_heateron) = 0 ;
+
+   
+
+
+        
   # - platform: gpio
   #   name: Relay 1
   #   id: relay_1
@@ -195,16 +221,39 @@ switch:
   - platform: gpio
     name: Pump1  #太阳能板循环泵
     id: pump1
-    pin: GPIO4    #  改相应针
-    inverted: false
-    restore_mode: RESTORE_DEFAULT_OFF
+    pin: GPIO12  #  改相应针
+    inverted: False
+    restore_mode: ALWAYS_OFF
+    on_turn_on:
+      - lambda: |-
+          esphome::ESPTime date = id(sntp_time).now();
+          struct tm tm ;
+          tm = date.to_c_tm();
+          id(global_pump1on) = mktime(&tm);
+    on_turn_off:
+      - lambda: |-
+          
+          id(global_pump1on) = 0 ;
+
+   
 
   - platform: gpio
     name: Pump2  #管道热水循环泵
     id: pump2
     pin: GPIO5    #  改相应针
     inverted: false
-    restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: ALWAYS_OFF
+    on_turn_on:
+      - lambda: |-
+          esphome::ESPTime date = id(sntp_time).now();
+          struct tm tm ;
+          tm = date.to_c_tm();
+          id(global_pump2on) = mktime(&tm);
+    on_turn_off:
+      - lambda: |-
+          
+          id(global_pump2on) = 0 ;
+
 
   - platform: template
     name: 103 Holiday

@@ -15,9 +15,9 @@ or connect to: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
 
 #pragma once
 #include <array>
-#include <iostream>
-#include <chrono>
-#include <thread>
+//#include <iostream>
+//#include <chrono>
+//#include <thread>
 
 static template_::TemplateSwitch* * switches[] = {&enabled, &sunday, &monday, &tuesday, &wednesday, &thursday, &friday, &saturday, &repeat, &negative_offset};
 
@@ -329,7 +329,7 @@ void onPressSave() {
         num_timer = 4;
     } else if(id(select_timer).state == "Timer 5 HeaterOn") {
         num_timer = 5;
-    } else if(id(select_timer).state == "Timer 6 Heateroff") {
+    } else if(id(select_timer).state == "Timer 6 HeaterOff") {
         num_timer = 6;
     } else if(id(select_timer).state == "Timer 7") {
         num_timer = 7;
@@ -366,12 +366,12 @@ void onPressSave() {
         // set the 10 switches states
         for (uint8_t i = 0; i < 10; i++) {
             id(global_timer)[num_timer][i] = (*switches[i])->state;
-            // ESP_LOGD("onPressSave", "------ save Loop Number %i value %i (switch) ------", i, id(global_timer)[num_timer][i]);
+               //ESP_LOGD("onPressSave", "------ save Loop Number %i value %i (switch) ------", i, id(global_timer)[num_timer][i]);
         }
         // set the 7 number states (in the global array we start at 10)
         for (uint8_t i = 0; i < 7; i++) {
             id(global_timer)[num_timer][10 + i] = (*numbers[i])->state;
-            // ESP_LOGD("onPressSave", "------ save Loop Number %i value %d (number) ------", 10 + i, (*numbers[i])->state);
+              //ESP_LOGD("onPressSave", "------ save Loop Number %i value %d (number) ------", 10 + i, (*numbers[i])->state);
         }
     }
     // timer settings changed reset timestamps
@@ -385,21 +385,22 @@ void antifreezeSolar(){
     if(id(t4_tank_bottom).state < antifreeztank_temp){
         if(id(relay_0_heater).state == false){
             ESP_LOGD("antifreezeSolar","电加热器开关被太阳能板防冻函数打开");
-            id(relay_0_heater).publish_state(true);
+            id(relay_0_heater).turn_on();
         }else if(id(relay_0_heater).state == true){
-            ESP_LOGD("antifreezeSolar","电加热器开关已经被打开");   
+            ESP_LOGD("antifreezeSolar","电加热器开关已经被打开");  
+            id(relay_0_heater).turn_on(); 
         }
         else{
             ESP_LOGD("antifreezeSolar","警告：电加热器开关不可用，太阳能板抗冻可能失败");
         }     
         }
     ESP_LOGD("antifreezeSolar","打开太阳能循环泵抗冻");   
-    id(pump1).publish_state(true);
+    id(pump1).turn_on();
     if(id(t1_solar).state > antifreezstop_temp){
         ESP_LOGD("antifreezeSolar","antifreezeSolar","关闭太阳能循环泵");
-        id(pump1).publish_state(false);
+        id(pump1).turn_off();
         ESP_LOGD("antifreezeSolar","关闭电加热开关");
-        id(relay_0_heater).publish_state(false);
+        id(relay_0_heater).turn_off();
         id(flag_count_antifreezSolar) = false;
         ESP_LOGD("antifreezeSolar","太阳能板抗冻程序结束");
     }else{
@@ -414,21 +415,22 @@ void antifreezePipe(){
     if(id(t2_tank_top).state < antifreeztank_temp){
         if(id(relay_0_heater).state == false){
             ESP_LOGD("antifreezePipe","电加热器开关被管道防冻函数打开");
-            id(relay_0_heater).publish_state(true);
+            id(relay_0_heater).turn_on();
         }else if(id(relay_0_heater).state == true){
-            ESP_LOGD("antifreezePipe","电加热器开关已经被打开");   
+            ESP_LOGD("antifreezePipe","电加热器开关已经被打开"); 
+            id(relay_0_heater).turn_on(); 
         }
         else{
             ESP_LOGD("antifreezePipe","警告：电加热器开关不可用，管道抗冻可能失败");
         }     
         }
     ESP_LOGD("antifreezePipe","打开管道循环泵抗冻");   
-    id(pump2).publish_state(true);
+    id(pump2).turn_on();
     if(id(t3_pipe).state > antifreezstop_temp){
         ESP_LOGD("antifreezePipe","关闭管道循环泵");
-        id(pump2).publish_state(false);
+        id(pump2).turn_on();
         ESP_LOGD("antifreezePipe","关闭电加热开关");
-        id(relay_0_heater).publish_state(false);
+        id(relay_0_heater).turn_off();
         id(flag_count_antifreezPipe) = false;
         ESP_LOGD("antifreezePipe","管道抗冻程序结束");
     }else{
@@ -439,9 +441,9 @@ void antifreezePipe(){
         
 void protectTank(){
     ESP_LOGD("protectTank","水箱高温保护，关闭电加热器");
-    id(relay_0_heater).publish_state(false);
+    id(relay_0_heater).turn_off();
     ESP_LOGD("protectTank","水箱高温保护，关闭太阳能板循环泵");
-    id(pump1).publish_state(false);
+    id(pump1).turn_off();
     
 }
 
@@ -452,41 +454,85 @@ void onPressHeatingtoTarget() {
     bool heaterOn = false;
     esphome::ESPTime startTime = id(sntp_time).now();
     if(id(t2_tank_top).state >= temp_target_temp){
-        id(relay_0_heater).publish_state(false);
+        id(relay_0_heater).turn_off();
         ESP_LOGD("onPressHeatingtoTarget","温度已达到 %i 度,无需手动加热,关闭加热器并退出手动加热函数",id(target_temp).state);
         return; 
+    }else {
+        ESP_LOGD("onPressHeatingtoTarget","手动打开电加热开关");
+        id(relay_0_heater).turn_on();
     }
-    while (true) {
-        float t1 = id(t2_tank_top).state; // 从传感器读取上部水箱温度
 
-        if (t1 < temp_target_temp && !heaterOn) {
-            heaterOn = true;
-            id(relay_0_heater).publish_state(true);
-            ESP_LOGD("onPressHeatingtoTarget","手动打开电加热器开关");
-        } else {
-            if (t1 >= temp_target_temp) {
-                heaterOn = false;
-                id(relay_0_heater).publish_state(false);
-                ESP_LOGD("onPressHeatingtoTarget","温度达到%i度,关闭加热器并退出手动加热函数",id(target_temp).state);
-                break; 
-            }
+}
 
-            esphome::ESPTime currentTime = id(sntp_time).now();
-            time_t elapsedTime = currentTime.timestamp - startTime.timestamp; 
-            ESP_LOGD("onPressHeatingtoTarget","手动加热持续时间：%lu 秒",elapsedTime);
-            if (elapsedTime >= 7200) { // 7200秒（2小时）
-                heaterOn = false;
-                id(relay_0_heater).publish_state(false);
-                ESP_LOGD("onPressHeatingtoTarget","手动加热已持续 %lu 秒,关闭加热器并退出手动加热函数",elapsedTime);
-                break; // 结束函数执行
-            }
+void checkSwitchOnDurationheater(time_t maxdurationtime) {
+    struct tm tm ;
+    time_t timestamp1 = 0;
+    time_t timestamp2 = 0;
+    time_t timestamp3 = 0;
+
+
+    if(id(relay_0_heater).state){
+        esphome::ESPTime date1 =id(sntp_time).now(); 
+        tm = date1.to_c_tm();
+        timestamp1 = mktime(&tm);
+
+        timestamp2 = id(global_heateron);
+        if(((timestamp1-timestamp2) >= maxdurationtime)&&(timestamp2 != timestamp3)){
+            ESP_LOGD("checkSwitchOnDuration","电加热开关打开已持续:%i分钟",maxdurationtime/60);
+            ESP_LOGD("checkSwitchOnDuration","为了保证安全,电加热开关已自动关闭！");
+            id(relay_0_heater).turn_off();
+
         }
-        delay(60000); //delay 60秒
-        //std::this_thread::sleep_for(std::chrono::seconds(60)); //delay 60秒
     }
 }
 
+void checkSwitchOnDurationpump1(time_t maxdurationtime) {
+    struct tm tm ;
+    time_t timestamp1 = 0;
+    time_t timestamp2 = 0;
+    time_t timestamp3 = 0;
+    if(id(pump1).state){
+        esphome::ESPTime date1 =id(sntp_time).now(); 
+        tm = date1.to_c_tm();
+        timestamp1 = mktime(&tm);
+
+        timestamp2 = id(global_pump1on);
+        if(((timestamp1-timestamp2) >= maxdurationtime)&&(timestamp2 != timestamp3)){
+            ESP_LOGD("checkSwitchOnDurationpump1","太阳能循环泵工作已打持续:%i分钟",maxdurationtime/60);
+            ESP_LOGD("checkSwitchOnDurationpump1","为了保证安全,太阳能循环泵开关已自动关闭！");
+            id(pump1).turn_off();
+
+        }
+    }
+
+}
+
+void checkSwitchOnDurationpump2(time_t maxdurationtime) {
+    struct tm tm ;
+    time_t timestamp1 = 0;
+    time_t timestamp2 = 0;
+    time_t timestamp3 = 0;
+    if(id(pump2).state){
+        esphome::ESPTime date1 =id(sntp_time).now(); 
+        tm = date1.to_c_tm();
+        timestamp1 = mktime(&tm);
+
+        timestamp2 = id(global_pump2on);
+        if(((timestamp1-timestamp2) >= maxdurationtime)&&(timestamp2 != timestamp3)){
+            ESP_LOGD("checkSwitchOnDurationpump2","管道循环泵工作已持续:%i分钟",maxdurationtime/60);
+            ESP_LOGD("checkSwitchOnDurationpump2","为了保证安全,管道循环泵已自动关闭！");
+            id(pump2).turn_off();
+
+        }
+    }
+
+}
+
+
+
 void mainonInterval(){
+    //time_t t = 60;
+    ESP_LOGD("mainonInterval", "------ Ran mainonInerval ------");
     if((id(t1_solar).state <= antifreez_temp)||(id(flag_count_antifreezSolar))){
         
         antifreezeSolar(); //调用太阳能板防冻函数
@@ -495,19 +541,25 @@ void mainonInterval(){
 
         antifreezePipe(); //调用循环管道防冻函数
     }
+    checkSwitchOnDurationheater(7200);//检查电加器加热是否超过2小时，超过即关掉。
+    checkSwitchOnDurationpump1(1200); //检查太阳能循环泵工作是否超过20分钟，超过即关掉。
+    checkSwitchOnDurationpump2(1200); //检查热水管道循环泵工作是否超过20分钟，超过即关掉。
     if(id(t2_tank_top).state >= protect_temp){
 
         protectTank();  //调用水箱高温保护函数
         return;
     }else{
-        if(((id(t1_solar).state - id(t2_tank_top).state)>= high_deltasolartanktop_temp)&&
+        if(((id(t1_solar).state - id(t4_tank_bottom).state)>= high_deltasolartanktop_temp)&&
             (id(id(t2_tank_top).state <= protect_temp))){
             ESP_LOGD("mainonInterval","打开太阳能板循环泵换热");   
-            id(pump1).publish_state(true);    
+            id(pump1).turn_on();
+         //   id(pump1).publish_state(true);    
         }
-        if(((id(t1_solar).state - id(t2_tank_top).state)< low_deltasolartanktop_temp)){
+        if(((id(t1_solar).state - id(t4_tank_bottom).state)< low_deltasolartanktop_temp)
+        &&(id(t1_solar).state > 5)){
             ESP_LOGD("mainonInterval","太阳能板循环泵关闭,完成换热");   
-            id(pump1).publish_state(false);       
+            id(pump1).turn_off();
+        //    id(pump1).publish_state(false);       
         }
         if(id(holiday_mode).state){
             ESP_LOGD("mainonInterval","度假中,跳出mainInterval一次");  
@@ -519,7 +571,7 @@ void mainonInterval(){
                 onInterval(); //
             }else{
                 ESP_LOGD("mainonInterval","水箱已到目标温度,关掉电加热器,跳出mainInterval一次"); 
-                id(relay_0_heater).publish_state(false);
+                id(relay_0_heater).turn_off();
                 return;
             }
         
