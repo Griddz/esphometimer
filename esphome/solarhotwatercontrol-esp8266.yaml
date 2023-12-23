@@ -221,7 +221,7 @@ switch:
   - platform: gpio
     name: Pump1  #太阳能板循环泵
     id: pump1
-    pin: GPIO12  #  改相应针
+    pin: GPIO15  #  改相应针
     inverted: False
     restore_mode: ALWAYS_OFF
     on_turn_on:

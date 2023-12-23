@@ -32,18 +32,18 @@ static gpio::GPIOSwitch* * relays[num_of_relays] = {&relay_0_heater};
 const float protect_temp = 80;
 
 //抗冻开始温度阀值
-const float antifreez_temp = 3;
+const float antifreez_temp = 12;
 
 //抗冻结束温度阀值
-const float antifreezstop_temp = 5;
+const float antifreezstop_temp = 15;
 
 //抗冻时水箱温度阀值
-const float antifreeztank_temp = 8;
+const float antifreeztank_temp = 13;
 
-//太阳能板与水箱的温差高阀值
+//太阳能板与水箱的(换热开始阀值)温差高阀值
 const float high_deltasolartanktop_temp = 8;
 
-//太阳能板与水箱的温差低阀值
+//太阳能板与水箱的温差(换热停止阀值))低阀值
 const float low_deltasolartanktop_temp = 4;
 
 
@@ -388,7 +388,7 @@ void antifreezeSolar(){
             id(relay_0_heater).turn_on();
         }else if(id(relay_0_heater).state == true){
             ESP_LOGD("antifreezeSolar","电加热器开关已经被打开");  
-            id(relay_0_heater).turn_on(); 
+          //  id(relay_0_heater).turn_on(); 
         }
         else{
             ESP_LOGD("antifreezeSolar","警告：电加热器开关不可用，太阳能板抗冻可能失败");
@@ -418,7 +418,7 @@ void antifreezePipe(){
             id(relay_0_heater).turn_on();
         }else if(id(relay_0_heater).state == true){
             ESP_LOGD("antifreezePipe","电加热器开关已经被打开"); 
-            id(relay_0_heater).turn_on(); 
+           // id(relay_0_heater).turn_on(); 
         }
         else{
             ESP_LOGD("antifreezePipe","警告：电加热器开关不可用，管道抗冻可能失败");
@@ -428,7 +428,7 @@ void antifreezePipe(){
     id(pump2).turn_on();
     if(id(t3_pipe).state > antifreezstop_temp){
         ESP_LOGD("antifreezePipe","关闭管道循环泵");
-        id(pump2).turn_on();
+        id(pump2).turn_off();
         ESP_LOGD("antifreezePipe","关闭电加热开关");
         id(relay_0_heater).turn_off();
         id(flag_count_antifreezPipe) = false;
@@ -451,7 +451,6 @@ void protectTank(){
 // 如果在二小时内水箱已加热至目标温度，则立即停止电加热。
 void onPressHeatingtoTarget() {
     float temp_target_temp = id(target_temp).state;
-    bool heaterOn = false;
     esphome::ESPTime startTime = id(sntp_time).now();
     if(id(t2_tank_top).state >= temp_target_temp){
         id(relay_0_heater).turn_off();
@@ -556,7 +555,7 @@ void mainonInterval(){
          //   id(pump1).publish_state(true);    
         }
         if(((id(t1_solar).state - id(t4_tank_bottom).state)< low_deltasolartanktop_temp)
-        &&(id(t1_solar).state > 5)){
+        &&(id(t1_solar).state > antifreezstop_temp)){
             ESP_LOGD("mainonInterval","太阳能板循环泵关闭,完成换热");   
             id(pump1).turn_off();
         //    id(pump1).publish_state(false);       
