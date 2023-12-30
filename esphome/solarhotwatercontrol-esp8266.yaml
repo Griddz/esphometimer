@@ -377,7 +377,7 @@ dallas:
     update_interval: 10s
 sensor:
   - platform: dallas
-    address: 0x140000003089bc28
+    address: 0x9a00000031399728
     name: "t1_solar"
 #    name: "太阳能板处温度"
     id: t1_solar
@@ -393,7 +393,7 @@ sensor:
 #    name: "循环水管处温度"
     id: t3_pipe
   - platform: dallas
-    address: 0x9a00000031399728
+    address: 0x140000003089bc28
     name: "t4_tank_bottom"
 #    name: "热水箱下部温度"
     id: t4_tank_bottom  

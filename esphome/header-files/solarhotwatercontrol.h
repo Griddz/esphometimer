@@ -32,13 +32,13 @@ static gpio::GPIOSwitch* * relays[num_of_relays] = {&relay_0_heater};
 const float protect_temp = 80;
 
 //抗冻开始温度阀值
-const float antifreez_temp = 12;
+const float antifreez_temp = 3;
 
 //抗冻结束温度阀值
-const float antifreezstop_temp = 15;
+const float antifreezstop_temp = 5;
 
 //抗冻时水箱温度阀值
-const float antifreeztank_temp = 13;
+const float antifreeztank_temp = 8;
 
 //太阳能板与水箱的(换热开始阀值)温差高阀值
 const float high_deltasolartanktop_temp = 8;
@@ -540,7 +540,7 @@ void mainonInterval(){
 
         antifreezePipe(); //调用循环管道防冻函数
     }
-    checkSwitchOnDurationheater(7200);//检查电加器加热是否超过2小时，超过即关掉。
+    checkSwitchOnDurationheater(10800);//检查电加器加热是否超过3小时，超过即关掉。
     checkSwitchOnDurationpump1(1200); //检查太阳能循环泵工作是否超过20分钟，超过即关掉。
     checkSwitchOnDurationpump2(1200); //检查热水管道循环泵工作是否超过20分钟，超过即关掉。
     if(id(t2_tank_top).state >= protect_temp){
@@ -578,6 +578,5 @@ void mainonInterval(){
     }
 
 }
-
 
 
