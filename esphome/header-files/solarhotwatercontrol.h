@@ -38,7 +38,7 @@ const float antifreez_temp = 3;
 const float antifreezstop_temp = 5;
 
 //抗冻时水箱温度阀值
-const float antifreeztank_temp = 8;
+const float antifreeztank_temp = 7;
 
 //太阳能板与水箱的(换热开始阀值)温差高阀值
 const float high_deltasolartanktop_temp = 8;
@@ -447,8 +447,8 @@ void protectTank(){
     
 }
 
-// 手动加热函数,一旦被调用，电加热最多加热二小时，如果持续加热二小时水箱还没有到目标温度，则停止加热；
-// 如果在二小时内水箱已加热至目标温度，则立即停止电加热。
+// 手动加热函数,一旦被调用，电加热最多加热五小时，如果持续加热五小时水箱还没有到目标温度，则停止加热；
+// 如果在五小时内水箱已加热至目标温度，则立即停止电加热。
 void onPressHeatingtoTarget() {
     float temp_target_temp = id(target_temp).state;
     esphome::ESPTime startTime = id(sntp_time).now();
@@ -540,7 +540,7 @@ void mainonInterval(){
 
         antifreezePipe(); //调用循环管道防冻函数
     }
-    checkSwitchOnDurationheater(10800);//检查电加器加热是否超过3小时，超过即关掉。
+    checkSwitchOnDurationheater(18000);//检查电加器加热是否超过5小时，超过即关掉。
     checkSwitchOnDurationpump1(1200); //检查太阳能循环泵工作是否超过20分钟，超过即关掉。
     checkSwitchOnDurationpump2(1200); //检查热水管道循环泵工作是否超过20分钟，超过即关掉。
     if(id(t2_tank_top).state >= protect_temp){
@@ -569,14 +569,19 @@ void mainonInterval(){
                 ESP_LOGD("mainonInterval","检查并执行定时加热"); 
                 onInterval(); //
             }else{
-                ESP_LOGD("mainonInterval","水箱已到目标温度,关掉电加热器,跳出mainInterval一次"); 
-                id(relay_0_heater).turn_off();
-                return;
+                 //防止t2_tank_top温度值无效时关闭电加热
+                if(id(t2_tank_top).state > id(target_temp).state){
+                    ESP_LOGD("mainonInterval","水箱已到目标温度,关掉电加热器,跳出mainInterval一次"); 
+                    id(relay_0_heater).turn_off();
+                    return;
+                } 
+
             }
         
         }
     }
 
 }
+
 
 

@@ -49,7 +49,7 @@ sun:
 
 
 interval:
-  - interval: 10s
+  - interval: 60s
     then:
       - lambda: |-
           mainonInterval();
@@ -196,7 +196,7 @@ switch:
     id: relay_0_heater
     pin: GPIO16   #  改相应针
     inverted: false
-    restore_mode: ALWAYS_OFF
+    restore_mode: RESTORE_DEFAULT_OFF
     on_turn_on:
       - lambda: |-
           esphome::ESPTime date = id(sntp_time).now();
@@ -242,7 +242,7 @@ switch:
     id: pump2
     pin: GPIO5    #  改相应针
     inverted: false
-    restore_mode: ALWAYS_OFF
+    restore_mode: RESTORE_DEFAULT_OFF
     on_turn_on:
       - lambda: |-
           esphome::ESPTime date = id(sntp_time).now();
@@ -374,29 +374,50 @@ button:
 # DS18B20温度传感器
 dallas:
   - pin: GPIO2 
-    update_interval: 10s
+    update_interval: 30s
 sensor:
   - platform: dallas
     address: 0x9a00000031399728
     name: "t1_solar"
 #    name: "太阳能板处温度"
     id: t1_solar
+    # filters:
+    #   - median:
+    #       window_size: 9
+    #       send_every: 5
+    #       send_first_at: 1
     
   - platform: dallas
     address: 0xe200000031ace028
     name: "t2_tank_top"
 #    name: "热水箱上部温度"
     id: t2_tank_top
+    # filters:
+    #   - median:
+    #       window_size: 9
+    #       send_every: 5
+    #       send_first_at: 1
+
   - platform: dallas
     address: 0xc0000000335cd228
     name: "t3_pipe"
 #    name: "循环水管处温度"
     id: t3_pipe
+    # filters:
+    #   - median:
+    #       window_size: 9
+    #       send_every: 5
+    #       send_first_at: 1
   - platform: dallas
     address: 0x140000003089bc28
     name: "t4_tank_bottom"
 #    name: "热水箱下部温度"
     id: t4_tank_bottom  
+    # filters:
+    #   - median:
+    #       window_size: 9
+    #       send_every: 5
+    #       send_first_at: 1    
 
   - platform: wifi_signal
     name:  solarHotwaterControl WiFi Signal
