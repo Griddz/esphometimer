@@ -418,6 +418,13 @@ sensor:
     #       window_size: 9
     #       send_every: 5
     #       send_first_at: 1    
+#   - platform: dallas
+#     address: 0x900000003127df28
+#     name: "t5_coldwater_pipe"
+# #    name: "自来水管温度"
+#     id: t5_coldwater_pipe     
+
+
 
   - platform: wifi_signal
     name:  solarHotwaterControl WiFi Signal
