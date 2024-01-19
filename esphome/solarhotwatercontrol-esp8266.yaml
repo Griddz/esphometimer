@@ -242,7 +242,7 @@ switch:
     id: pump2
     pin: GPIO5    #  改相应针
     inverted: false
-    restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: ALWAYS_OFF
     on_turn_on:
       - lambda: |-
           esphome::ESPTime date = id(sntp_time).now();
@@ -361,22 +361,22 @@ button:
     on_press:
       - lambda: |-
           onPressSave();
-  - platform: template
-    name: 102 Hotwater Manual Heating
     on_press: 
-    #水箱加热至目标温度
-      - lambda: |-
-          onPressHeatingtoTarget();
-    
+
         
   - platform: restart
     name: "Restart"
 # DS18B20温度传感器
 dallas:
   - pin: GPIO2 
+    id: hub_1
     update_interval: 30s
+  - pin: GPIO12
+    id: hub_2
+    update_interval: 30s    
 sensor:
   - platform: dallas
+    dallas_id: hub_1
     address: 0x9a00000031399728
     name: "t1_solar"
 #    name: "太阳能板处温度"
@@ -388,6 +388,7 @@ sensor:
     #       send_first_at: 1
     
   - platform: dallas
+    dallas_id: hub_2
     address: 0xe200000031ace028
     name: "t2_tank_top"
 #    name: "热水箱上部温度"
@@ -399,6 +400,7 @@ sensor:
     #       send_first_at: 1
 
   - platform: dallas
+    dallas_id: hub_1
     address: 0xc0000000335cd228
     name: "t3_pipe"
 #    name: "循环水管处温度"
@@ -409,6 +411,7 @@ sensor:
     #       send_every: 5
     #       send_first_at: 1
   - platform: dallas
+    dallas_id: hub_1
     address: 0x140000003089bc28
     name: "t4_tank_bottom"
 #    name: "热水箱下部温度"
@@ -418,11 +421,20 @@ sensor:
     #       window_size: 9
     #       send_every: 5
     #       send_first_at: 1    
-#   - platform: dallas
-#     address: 0x900000003127df28
-#     name: "t5_coldwater_pipe"
-# #    name: "自来水管温度"
-#     id: t5_coldwater_pipe     
+  - platform: dallas
+    dallas_id: hub_2
+    address: 0x900000003127df28
+    name: "t5_coldwater_pipe"
+#    name: "自来水管温度"
+    id: t5_coldwater_pipe
+  - platform: dallas
+    dallas_id: hub_2
+    address: 0x3f00000032b86428
+    name: "t6_outdoor"
+#    name: "室外温度"
+    id: t6_outdoor     
+
+         
 
 
 
