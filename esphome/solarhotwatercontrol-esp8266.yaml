@@ -361,7 +361,6 @@ button:
     on_press:
       - lambda: |-
           onPressSave();
-    on_press: 
 
         
   - platform: restart

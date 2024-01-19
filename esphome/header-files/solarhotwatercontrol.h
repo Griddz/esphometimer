@@ -38,7 +38,7 @@ const float antifreez_temp = 3;
 const float antifreezstop_temp = 5;
 
 //抗冻时水箱温度阀值
-const float antifreeztank_temp = 7;
+const float antifreeztank_temp =7;
 
 //太阳能板与水箱的(换热开始阀值)温差高阀值
 const float high_deltasolartanktop_temp = 8;
@@ -80,7 +80,12 @@ void doRelayAction(uint8_t i, time_t timestamp, bool set_relays) {
             if((*relays[id(global_timer)[i][12]])->state != id(global_timer)[i][13]) {
                 ESP_LOGD("doRelayAction", "------ set state %i ------", id(global_timer)[i][13]);
                 // set relay state [position 12] from timer action [position 13]
-                (*relays[id(global_timer)[i][12]])->publish_state(id(global_timer)[i][13]);
+             //   (*relays[id(global_timer)[i][12]])->publish_state(id(global_timer)[i][13]);
+                if(id(global_timer)[i][13]== 1){
+                    (*relays[id(global_timer)[i][12]])->turn_on();
+                } else {
+                    (*relays[id(global_timer)[i][12]])->turn_off();
+                }
             }
         }
     }
@@ -235,7 +240,12 @@ void onInterval() {
         for (uint8_t i = 0; i < num_of_relays; i++) {
             ESP_LOGD("interval", "------ Set relay %i to state %i ------", i, temp_relays[i]);
             if((*relays[i])->state != temp_relays[i]) {
-                (*relays[i])->publish_state(temp_relays[i]);
+                //(*relays[i])->publish_state(temp_relays[i]);
+                if(temp_relays[i] == 1){
+                    (*relays[i])->turn_on();
+                } else {
+                    (*relays[i])->turn_off();
+                }
             }
         }
         
@@ -447,21 +457,7 @@ void protectTank(){
     
 }
 
-// 手动加热函数,一旦被调用，电加热最多加热五小时，如果持续加热五小时水箱还没有到目标温度，则停止加热；
-// 如果在五小时内水箱已加热至目标温度，则立即停止电加热。
-void onPressHeatingtoTarget() {
-    float temp_target_temp = id(target_temp).state;
-    esphome::ESPTime startTime = id(sntp_time).now();
-    if(id(t2_tank_top).state >= temp_target_temp){
-        id(relay_0_heater).turn_off();
-        ESP_LOGD("onPressHeatingtoTarget","温度已达到 %i 度,无需手动加热,关闭加热器并退出手动加热函数",id(target_temp).state);
-        return; 
-    }else {
-        ESP_LOGD("onPressHeatingtoTarget","手动打开电加热开关");
-        id(relay_0_heater).turn_on();
-    }
 
-}
 
 void checkSwitchOnDurationheater(time_t maxdurationtime) {
     struct tm tm ;
@@ -561,7 +557,11 @@ void mainonInterval(){
         //    id(pump1).publish_state(false);       
         }
         if(id(holiday_mode).state){
-            ESP_LOGD("mainonInterval","度假中,跳出mainInterval一次");  
+            if(id(t2_tank_top).state > id(target_temp).state){
+                ESP_LOGD("mainonInterval","度假中,水箱已到目标温度,关掉电加热器"); 
+                id(relay_0_heater).turn_off();
+                } 
+            ESP_LOGD("mainonInterval","度假中,跳出mainInterval一次");    
             return;
 
         }else{
