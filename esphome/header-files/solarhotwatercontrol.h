@@ -81,10 +81,14 @@ void doRelayAction(uint8_t i, time_t timestamp, bool set_relays) {
                 ESP_LOGD("doRelayAction", "------ set state %i ------", id(global_timer)[i][13]);
                 // set relay state [position 12] from timer action [position 13]
              //   (*relays[id(global_timer)[i][12]])->publish_state(id(global_timer)[i][13]);
-                if(id(global_timer)[i][13]== 1){
+                if(id(global_timer)[i][13] == true){
+                    ESP_LOGD("doRelayAction", "------ set heater on");
                     (*relays[id(global_timer)[i][12]])->turn_on();
+                    
                 } else {
+                    ESP_LOGD("doRelayAction", "------ set heater off");
                     (*relays[id(global_timer)[i][12]])->turn_off();
+
                 }
             }
         }
@@ -242,8 +246,10 @@ void onInterval() {
             if((*relays[i])->state != temp_relays[i]) {
                 //(*relays[i])->publish_state(temp_relays[i]);
                 if(temp_relays[i] == 1){
+                    ESP_LOGD("interval", "------ Set missed timer--heater on");
                     (*relays[i])->turn_on();
                 } else {
+                    ESP_LOGD("interval", "------ Set missed timer--heater off");
                     (*relays[i])->turn_off();
                 }
             }
