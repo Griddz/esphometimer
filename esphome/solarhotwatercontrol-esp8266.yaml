@@ -208,7 +208,7 @@ switch:
           
           id(global_heateron) = 0 ;
 
-   
+
 
 
         
@@ -380,7 +380,8 @@ sensor:
     name: "t1_solar"
 #    name: "太阳能板处温度"
     id: t1_solar
-    # filters:
+    filters:
+      - filter_out: 85.0
     #   - median:
     #       window_size: 9
     #       send_every: 5
@@ -392,6 +393,8 @@ sensor:
     name: "t2_tank_top"
 #    name: "热水箱上部温度"
     id: t2_tank_top
+    filters:
+      - filter_out: 85.0
     # filters:
     #   - median:
     #       window_size: 9
@@ -404,6 +407,8 @@ sensor:
     name: "t3_pipe"
 #    name: "循环水管处温度"
     id: t3_pipe
+    filters:
+      - filter_out: 85.0
     # filters:
     #   - median:
     #       window_size: 9
@@ -415,6 +420,8 @@ sensor:
     name: "t4_tank_bottom"
 #    name: "热水箱下部温度"
     id: t4_tank_bottom  
+    filters:
+      - filter_out: 85.0
     # filters:
     #   - median:
     #       window_size: 9
@@ -426,14 +433,18 @@ sensor:
     name: "t5_coldwater_pipe"
 #    name: "自来水管温度"
     id: t5_coldwater_pipe
+    filters:
+      - filter_out: 85.0
   - platform: dallas
     dallas_id: hub_2
     address: 0x3f00000032b86428
     name: "t6_outdoor"
 #    name: "室外温度"
-    id: t6_outdoor     
+    id: t6_outdoor 
+    filters:
+      - filter_out: 85.0    
 
-         
+
 
 
 

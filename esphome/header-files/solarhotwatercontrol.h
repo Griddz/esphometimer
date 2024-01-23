@@ -415,8 +415,13 @@ void antifreezeSolar(){
     if(id(t1_solar).state > antifreezstop_temp){
         ESP_LOGD("antifreezeSolar","antifreezeSolar","关闭太阳能循环泵");
         id(pump1).turn_off();
-        ESP_LOGD("antifreezeSolar","关闭电加热开关");
-        id(relay_0_heater).turn_off();
+     //水箱温度这么低，索性将水箱加热至目标标温度，虽然浪费能源但确保防冻！
+     //为安全起见，如果水箱达到目标温度，在这儿关闭一下电加热。
+        if(id(t2_tank_top).state > id(target_temp).state){
+            ESP_LOGD("antifreezeSolar","关闭电加热开关");
+            id(relay_0_heater).turn_off();
+        }
+
         id(flag_count_antifreezSolar) = false;
         ESP_LOGD("antifreezeSolar","太阳能板抗冻程序结束");
     }else{
@@ -428,7 +433,7 @@ void antifreezeSolar(){
 void antifreezePipe(){
     id(flag_count_antifreezPipe) = false;
     ESP_LOGD("antifreezePipe","进入防冻管道程序");
-    if(id(t2_tank_top).state < antifreeztank_temp){
+    if(id(t4_tank_bottom).state < antifreeztank_temp){
         if(id(relay_0_heater).state == false){
             ESP_LOGD("antifreezePipe","电加热器开关被管道防冻函数打开");
             id(relay_0_heater).turn_on();
@@ -442,11 +447,22 @@ void antifreezePipe(){
         }
     ESP_LOGD("antifreezePipe","打开管道循环泵抗冻");   
     id(pump2).turn_on();
+    /** 回水管道和太阳能板管道处的水泵位置失温最大，回水管道T3温度传感器紧临水泵，
+    但太阳能板循环管道水泵处没有温度传感器，推测如果回水管道需要防冻，则太阳能板管道此时也需要防冻 ***/
+    ESP_LOGD("antifreezePipe","也打开太阳能板循环泵抗冻");
+    id(pump1).turn_on();
     if(id(t3_pipe).state > antifreezstop_temp){
         ESP_LOGD("antifreezePipe","关闭管道循环泵");
         id(pump2).turn_off();
-        ESP_LOGD("antifreezePipe","关闭电加热开关");
-        id(relay_0_heater).turn_off();
+        ESP_LOGD("antifreezePipe","关闭太阳能板管道循环泵");
+        id(pump1).turn_off();
+     //水箱温度这么低，索性将水箱加热至目标标温度，虽然浪费能源但确保防冻！
+     //为安全起见，如果水箱达到目标温度，在这儿关闭一下电加热。
+        if(id(t2_tank_top).state > id(target_temp).state){
+            ESP_LOGD("antifreezeSolar","关闭电加热开关");
+            id(relay_0_heater).turn_off();
+        }
+
         id(flag_count_antifreezPipe) = false;
         ESP_LOGD("antifreezePipe","管道抗冻程序结束");
     }else{
@@ -556,8 +572,8 @@ void mainonInterval(){
             id(pump1).turn_on();
          //   id(pump1).publish_state(true);    
         }
-        if(((id(t1_solar).state - id(t4_tank_bottom).state)< low_deltasolartanktop_temp)
-        &&(id(t1_solar).state > antifreezstop_temp)){
+        // 回水管道防冻过程没有完成时不要关闭太阳能板循环泵
+        if(((id(t1_solar).state - id(t4_tank_bottom).state)< low_deltasolartanktop_temp)        &&(id(t1_solar).state > antifreezstop_temp)&&(!id(flag_count_antifreezPipe))){
             ESP_LOGD("mainonInterval","太阳能板循环泵关闭,完成换热");   
             id(pump1).turn_off();
         //    id(pump1).publish_state(false);       
