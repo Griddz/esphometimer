@@ -2,6 +2,7 @@
     "files.associations": {
         "chrono": "cpp",
         "locale": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "__locale": "cpp"
     }
 }

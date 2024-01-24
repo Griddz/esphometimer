@@ -566,14 +566,20 @@ void mainonInterval(){
         protectTank();  //调用水箱高温保护函数
         return;
     }else{
-        if(((id(t1_solar).state - id(t4_tank_bottom).state)>= high_deltasolartanktop_temp)&&
-            (id(id(t2_tank_top).state <= protect_temp))){
+        //如果t4_tank_bottom失效，但t1_solar,t2_tank_top可用，也能打开太阳板循环
+        if((((id(t1_solar).state - id(t4_tank_bottom).state)>= high_deltasolartanktop_temp)&&
+            (id(id(t2_tank_top).state <= protect_temp)))
+            ||(((id(t1_solar).state - id(t2_tank_top).state)>= high_deltasolartanktop_temp)&&
+            (id(id(t2_tank_top).state <= protect_temp)))){
             ESP_LOGD("mainonInterval","打开太阳能板循环泵换热");   
             id(pump1).turn_on();
          //   id(pump1).publish_state(true);    
         }
+
+ 
         // 回水管道防冻过程没有完成时不要关闭太阳能板循环泵
-        if(((id(t1_solar).state - id(t4_tank_bottom).state)< low_deltasolartanktop_temp)        &&(id(t1_solar).state > antifreezstop_temp)&&(!id(flag_count_antifreezPipe))){
+        if(((id(t1_solar).state - id(t4_tank_bottom).state)< low_deltasolartanktop_temp)
+            &&(id(t1_solar).state > antifreezstop_temp)&&(!id(flag_count_antifreezPipe))){
             ESP_LOGD("mainonInterval","太阳能板循环泵关闭,完成换热");   
             id(pump1).turn_off();
         //    id(pump1).publish_state(false);       
