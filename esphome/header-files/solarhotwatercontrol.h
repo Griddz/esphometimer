@@ -394,6 +394,20 @@ void onPressSave() {
     setTimestamps(num_timer);
 } // onPressSave
 
+void onPressgetglobalnextrun(){
+    uint8_t i = 0;
+    uint8_t loops = 20;
+
+        ESP_LOGD("onPressgetglobalnextrun", "get all timers ------");
+        ESP_LOGD("onPressgetglobalnextrun", "manual next run Timer 1 --- %lu" , id(global_next_run)[0]);
+        ESP_LOGD("onPressgetglobalnextrun", "manual next run Timer 2 --- %lu" , id(global_next_run)[1]);
+
+    for(; i < loops; i++) {
+
+        ESP_LOGD("onPressgetglobalnextrun", "global_timer %i ---%i:hour %i:minute", i + 1 , id(global_timer)[i][10], id(global_timer)[i][11]);
+        ESP_LOGD("onPressgetglobalnextrun", "next run Timer  --- %lu", id(global_next_run)[i]);
+    }
+}//onPressgetglobalnetxrun
  // add by zhou start 
 void antifreezeSolar(){
     id(flag_count_antifreezSolar) = false;
